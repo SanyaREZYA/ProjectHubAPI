@@ -5,7 +5,9 @@ namespace ProjectHubApi.Services;
 
 public interface IProjectService
 {
-    List<Project> GetAll();
-
-    Project Create(CreateProjectDto dto);
+    Task<List<Project>> GetAllAsync();
+    Task<Project?> GetByIdAsync(int id);
+    Task<Project> CreateAsync(CreateProjectDto dto);
+    Task<Project?> UpdateAsync(int id, UpdateProjectDto dto);
+    Task<bool> DeleteAsync(int id);
 }

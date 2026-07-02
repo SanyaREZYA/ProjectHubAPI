@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using ProjectHubApi.Data;
 using ProjectHubApi.Models;
 
@@ -5,33 +6,49 @@ namespace ProjectHubApi.Repositories;
 
 public class ProjectRepository : IProjectRepository
 {
-    private readonly InMemoryDatabase _database;
+    private readonly AppDbContext _context;
 
-    public ProjectRepository(
-        InMemoryDatabase database)
+    public ProjectRepository(AppDbContext context)
     {
-        _database = database;
+        _context = context;
     }
 
-    public List<Project> GetAll()
+    public async Task<List<Project>> GetAllAsync()
     {
-        return _database.Projects;
+        return await _context.Projects.ToListAsync();
     }
 
-    public Project Add(Project project)
+    public async Task<Project?> GetByIdAsync(int id)
     {
-        project.Id =
-            _database.Projects.Max(p => p.Id) + 1;
+        return await _context.Projects.FirstOrDefaultAsync(p => p.Id == id);
+    }
 
-        _database.Projects.Add(project);
+    public async Task<Project> AddAsync(Project project)
+    {
+        _context.Projects.Add(project);
+        await _context.SaveChangesAsync();
+        return project;
+    }
+
+    public async Task<Project?> UpdateAsync(int id, string name)
+    {
+        var project = await GetByIdAsync(id);
+        if (project is null) return null;
+
+        project.Name = name;
+        await _context.SaveChangesAsync();
 
         return project;
     }
 
-    public Project? GetById(int id)
+    public async Task<bool> DeleteAsync(int id)
     {
-        return _database.Projects
-            .FirstOrDefault(
-                p => p.Id == id);
+        var project = await GetByIdAsync(id);
+        if (project is null) return false;
+
+        _context.Projects.Remove(project);
+        await _context.SaveChangesAsync();
+
+        return true;
     }
 }
